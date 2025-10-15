@@ -36,7 +36,7 @@ sudo apt install python3 python3-pyqt5 flatpak policykit-1 -y
 
 ## 📜 Cara Menjalankannya
 
-git clone https://github.com/<username>/appwatch.git
+git clone https://github.com/yooson-code/AppWatch
 cd appwatch
 sudo python3 appwatch.py
 ```
