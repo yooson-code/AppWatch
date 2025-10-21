@@ -1,1 +1,57 @@
 2025-10-21 10:55:17,077 INFO: AppWatch starting
+2025-10-21 13:15:00,852 INFO: AppWatch starting
+2025-10-21 13:15:31,361 INFO: Running uninstall: pacman -Rns --noconfirm libfprint-2-tod1-goodix
+2025-10-21 13:15:37,085 INFO: Uninstall requested for libfprint-2-tod1-goodix (pacman)
+2025-10-21 13:19:53,778 INFO: AppWatch starting
+2025-10-21 13:21:35,174 INFO: Running uninstall: pacman -Rns --noconfirm libfprint-2-tod1-goodix-debug
+2025-10-21 13:21:39,164 INFO: Running uninstall: pacman -Rns --noconfirm libfprint-tod
+2025-10-21 13:22:01,150 ERROR: Uninstall failed for libfprint-tod: error: failed to prepare transaction (could not satisfy dependencies)
+
+2025-10-21 13:22:01,150 INFO: Running uninstall: pacman -Rns --noconfirm libfprint-tod-debug
+2025-10-21 13:22:05,253 INFO: Running uninstall: yay -Rns --noconfirm libfprint-2-tod1-goodix-debug
+2025-10-21 13:22:08,082 ERROR: Uninstall failed for libfprint-2-tod1-goodix-debug: error: target not found: libfprint-2-tod1-goodix-debug
+ -> exit status 1
+
+2025-10-21 13:22:08,082 INFO: Running uninstall: yay -Rns --noconfirm libfprint-tod
+2025-10-21 13:22:10,970 ERROR: Uninstall failed for libfprint-tod: error: failed to prepare transaction (could not satisfy dependencies)
+ -> exit status 1
+
+2025-10-21 13:22:10,970 INFO: Running uninstall: yay -Rns --noconfirm libfprint-tod-debug
+2025-10-21 13:22:13,693 ERROR: Uninstall failed for libfprint-tod-debug: error: target not found: libfprint-tod-debug
+ -> exit status 1
+
+2025-10-21 13:22:32,193 INFO: AppWatch starting
+2025-10-21 13:22:59,977 INFO: AppWatch starting
+2025-10-21 13:23:47,083 INFO: Running uninstall: pacman -Rns --noconfirm libfprint-tod
+2025-10-21 13:23:47,206 ERROR: Uninstall failed for libfprint-tod: error: failed to prepare transaction (could not satisfy dependencies)
+
+2025-10-21 13:23:47,206 INFO: Running uninstall: yay -Rns --noconfirm libfprint-tod
+2025-10-21 13:23:47,361 ERROR: Uninstall failed for libfprint-tod: error: failed to prepare transaction (could not satisfy dependencies)
+ -> exit status 1
+
+2025-10-21 13:24:07,098 INFO: Running uninstall: yay -Rns --noconfirm libfprint-tod
+2025-10-21 13:24:10,674 ERROR: Uninstall failed for libfprint-tod: error: failed to prepare transaction (could not satisfy dependencies)
+ -> exit status 1
+
+2025-10-21 15:22:30,896 INFO: AppWatch starting
+2025-10-21 15:23:11,497 INFO: Running uninstall: pacman -Rns --noconfirm libfprint-tod
+2025-10-21 15:23:14,817 ERROR: Uninstall failed for libfprint-tod: error: failed to prepare transaction (could not satisfy dependencies)
+
+2025-10-21 15:23:21,170 INFO: Running uninstall: yay -Rns --noconfirm libfprint-tod
+2025-10-21 15:23:21,329 ERROR: Uninstall failed for libfprint-tod: error: failed to prepare transaction (could not satisfy dependencies)
+ -> exit status 1
+
+2025-10-21 15:23:53,941 INFO: Running uninstall: flatpak uninstall -y org.kde.krita
+2025-10-21 15:28:11,220 INFO: AppWatch starting
+2025-10-21 15:28:11,304 INFO: Loaded style from /home/yooson/Documents/appwatch/style.qss
+2025-10-21 15:29:20,928 INFO: Loaded style from /home/yooson/Documents/appwatch/style.qss
+2025-10-21 15:29:49,246 INFO: AppWatch starting
+2025-10-21 15:29:49,333 INFO: Loaded style from /home/yooson/Documents/appwatch/style.qss
+2025-10-21 15:42:02,152 INFO: AppWatch starting
+2025-10-21 15:42:02,241 INFO: Loaded style from /home/yooson/Documents/appwatch/style.qss
+2025-10-21 15:45:33,430 INFO: Running uninstall: yay -Rns --noconfirm libfprint-tod
+2025-10-21 15:45:38,657 ERROR: Uninstall failed for libfprint-tod: error: failed to prepare transaction (could not satisfy dependencies)
+ -> exit status 1
+
+2025-10-21 15:46:47,781 INFO: Running uninstall: pacman -Rns --noconfirm marknote
+2025-10-21 15:46:48,421 INFO: Uninstall requested for marknote (pacman)

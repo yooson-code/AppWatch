@@ -1,0 +1,36 @@
+/* AppWatch default stylesheet (QSS)
+   Edit this file to change colors and fonts.
+*/
+
+QWidget {
+    background-color: #1e1e2e;
+    color: #e6e6e6;
+    font-family: "DejaVu Sans", "Noto Sans", sans-serif;
+    font-size: 11pt;
+}
+
+QPushButton {
+    background-color: #2a2a40;
+    border: 1px solid #3a3a55;
+    padding: 6px 10px;
+    border-radius: 4px;
+}
+QPushButton:hover {
+    background-color: #3a3a55;
+}
+
+QLineEdit, QTableWidget {
+    background-color: #121217;
+    border: 1px solid #2a2a40;
+}
+
+QHeaderView::section {
+    background-color: #2a2a40;
+    padding: 4px;
+    border: 1px solid #3a3a55;
+}
+
+QLabel#statusLabel {
+    color: #d0d0d0;
+    font-size: 9pt;
+}
