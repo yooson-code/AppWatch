@@ -1,4 +1,6 @@
 import subprocess
+from .utils import run_privileged
+
 
 def list_yay_apps():
     try:
@@ -15,5 +17,6 @@ def list_yay_apps():
     except FileNotFoundError:
         return []
 
+
 def uninstall_yay(name):
-    subprocess.run(["yay", "-Rns", "--noconfirm", name])
+    return run_privileged(["yay", "-Rns", "--noconfirm", name])

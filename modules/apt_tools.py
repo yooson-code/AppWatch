@@ -1,4 +1,6 @@
 import subprocess
+from .utils import run_privileged
+
 
 def list_apt_apps():
     try:
@@ -16,5 +18,6 @@ def list_apt_apps():
     except FileNotFoundError:
         return []
 
+
 def uninstall_apt(name):
-    subprocess.run(["sudo", "apt", "remove", "-y", name])
+    return run_privileged(["apt", "remove", "-y", name])

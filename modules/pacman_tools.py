@@ -1,4 +1,6 @@
 import subprocess
+from .utils import run_privileged
+
 
 def list_pacman_apps():
     try:
@@ -15,5 +17,6 @@ def list_pacman_apps():
     except FileNotFoundError:
         return []
 
+
 def uninstall_pacman(name):
-    subprocess.run(["sudo", "pacman", "-Rns", "--noconfirm", name])
+    return run_privileged(["pacman", "-Rns", "--noconfirm", name])

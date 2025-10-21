@@ -1,183 +1,198 @@
+#!/usr/bin/env python3
 import sys
+import os
+import traceback
+
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QTableWidget, QTableWidgetItem, QLabel, QMessageBox, QLineEdit
+    QTableWidget, QTableWidgetItem, QLabel, QMessageBox, QLineEdit, QCheckBox
 )
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPalette, QColor
 
-# Import modules
 from modules.pacman_tools import list_pacman_apps, uninstall_pacman
 from modules.yay_tools import list_yay_apps, uninstall_yay
 from modules.flatpak_tools import list_flatpak_apps, uninstall_flatpak
 from modules.apt_tools import list_apt_apps, uninstall_apt
 from modules.utils import detect_distro
+from modules.pacman_tools import list_pacman_apps
+from modules.yay_tools import list_yay_apps
+from modules.flatpak_tools import list_flatpak_apps
+from modules.apt_tools import list_apt_apps
+
+import subprocess
 
 
 class AppWatch(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("AppWatch - Linux Application Monitor")
-        self.setGeometry(300, 150, 650, 550)
+        self.setWindowTitle('AppWatch — Linux Package Monitor')
+        self.resize(900, 600)
 
-        self.is_dark = False  # default mode terang
+        # Setup logging
+        import logging
+        log_path = os.path.join(os.path.dirname(__file__), 'appwatch.log')
+        logging.basicConfig(filename=log_path, level=logging.INFO,
+                            format='%(asctime)s %(levelname)s: %(message)s')
+        self.logger = logging.getLogger('appwatch')
+        self.logger.info('AppWatch starting')
 
-        main_layout = QVBoxLayout()
-        top_layout = QHBoxLayout()
+        # Controls
+        self.search = QLineEdit()
+        self.search.setPlaceholderText('Search...')
+        self.search.textChanged.connect(self.filter_apps)
 
-        # Judul
-        self.label = QLabel("📦 AppWatch")
-        self.label.setAlignment(Qt.AlignCenter)
-
-        # Kolom pencarian
-        self.search_box = QLineEdit()
-        self.search_box.setPlaceholderText("🔍 Cari aplikasi...")
-        self.search_box.textChanged.connect(self.filter_apps)
-
-        # Tombol refresh
-        self.refresh_btn = QPushButton(" Refresh")
-        self.refresh_btn.setIcon(QIcon.fromTheme("view-refresh"))
-        self.refresh_btn.setIconSize(QSize(18, 18))
+        self.refresh_btn = QPushButton('Refresh')
         self.refresh_btn.clicked.connect(self.load_apps)
 
-        # Tombol light/dark mode
-        self.theme_btn = QPushButton("🌙 Dark Mode")
-        self.theme_btn.setIcon(QIcon.fromTheme("weather-clear-night"))
-        self.theme_btn.setIconSize(QSize(18, 18))
-        self.theme_btn.clicked.connect(self.toggle_theme)
+        # Dry-run checkbox (don't actually execute uninstall when checked)
+        self.dry_run = QCheckBox('Dry run (do not actually uninstall)')
 
-        top_layout.addWidget(self.search_box)
-        top_layout.addWidget(self.refresh_btn)
-        top_layout.addWidget(self.theme_btn)
+        self.uninstall_btn = QPushButton('Uninstall Selected')
+        self.uninstall_btn.setEnabled(False)
+        self.uninstall_btn.clicked.connect(self.uninstall_selected)
 
-        # Tabel aplikasi
+        top = QHBoxLayout()
+        top.addWidget(self.search)
+        top.addWidget(self.refresh_btn)
+        top.addWidget(self.dry_run)
+        top.addWidget(self.uninstall_btn)
+
         self.table = QTableWidget()
         self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["Source", "Name", "Version"])
-        self.table.setColumnWidth(0, 120)
-        self.table.setColumnWidth(1, 300)
-        self.table.setColumnWidth(2, 150)
+        self.table.setHorizontalHeaderLabels(['Source', 'Name', 'Version'])
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.itemSelectionChanged.connect(lambda: self.uninstall_btn.setEnabled(self.table.currentRow() >= 0))
 
-        # Tombol uninstall
-        self.uninstall_btn = QPushButton("❌ Uninstall Selected")
-        self.uninstall_btn.clicked.connect(self.uninstall_app)
+        self.status = QLabel('')
 
-        main_layout.addWidget(self.label)
-        main_layout.addLayout(top_layout)
-        main_layout.addWidget(self.table)
-        main_layout.addWidget(self.uninstall_btn)
-        self.setLayout(main_layout)
+        layout = QVBoxLayout()
+        layout.addLayout(top)
+        layout.addWidget(self.table)
+        layout.addWidget(self.status)
+        self.setLayout(layout)
 
         self.all_apps = []
         self.load_apps()
-        self.apply_light_theme()  # tema awal terang
 
-    # ---------------------------
-    #  Muat daftar aplikasi
-    # ---------------------------
     def load_apps(self):
         self.table.setRowCount(0)
         distro = detect_distro()
         apps = []
-
-        if "arch" in distro or "manjaro" in distro:
-            apps = list_pacman_apps() + list_yay_apps() + list_flatpak_apps()
-        elif "ubuntu" in distro or "debian" in distro or "mint" in distro:
-            apps = list_apt_apps() + list_flatpak_apps()
-        else:
-            apps = list_flatpak_apps()
+        try:
+            if 'arch' in distro or 'manjaro' in distro:
+                apps = list_pacman_apps() + list_yay_apps() + list_flatpak_apps()
+            elif 'ubuntu' in distro or 'debian' in distro or 'mint' in distro:
+                apps = list_apt_apps() + list_flatpak_apps()
+            else:
+                apps = list_flatpak_apps()
+        except Exception as e:
+            self.status.setText(f'Error loading apps: {e}')
+            traceback.print_exc()
+            self.logger.exception('Error loading apps')
 
         self.all_apps = apps
-        self.display_apps(apps)
-
-    def display_apps(self, apps):
-        self.table.setRowCount(0)
-        for row, (src, name, version) in enumerate(apps):
-            self.table.insertRow(row)
-            self.table.setItem(row, 0, QTableWidgetItem(src))
-            self.table.setItem(row, 1, QTableWidgetItem(name))
-            self.table.setItem(row, 2, QTableWidgetItem(version))
+        for r, (src, name, ver) in enumerate(apps):
+            self.table.insertRow(r)
+            self.table.setItem(r, 0, QTableWidgetItem(src))
+            self.table.setItem(r, 1, QTableWidgetItem(name))
+            self.table.setItem(r, 2, QTableWidgetItem(ver))
 
     def filter_apps(self):
-        query = self.search_box.text().lower()
-        filtered = [app for app in self.all_apps if query in app[1].lower()]
-        self.display_apps(filtered)
+        q = self.search.text().lower()
+        filtered = [a for a in self.all_apps if q in a[1].lower()]
+        self.table.setRowCount(0)
+        for r, (src, name, ver) in enumerate(filtered):
+            self.table.insertRow(r)
+            self.table.setItem(r, 0, QTableWidgetItem(src))
+            self.table.setItem(r, 1, QTableWidgetItem(name))
+            self.table.setItem(r, 2, QTableWidgetItem(ver))
 
-    def uninstall_app(self):
+    def uninstall_selected(self):
         row = self.table.currentRow()
         if row < 0:
-            QMessageBox.warning(self, "Pilih Aplikasi", "Silakan pilih aplikasi yang ingin dihapus.")
             return
-
         src = self.table.item(row, 0).text()
         name = self.table.item(row, 1).text()
 
-        confirm = QMessageBox.question(self, "Konfirmasi",
-                                       f"Yakin ingin menghapus {name} ({src})?",
-                                       QMessageBox.Yes | QMessageBox.No)
-        if confirm == QMessageBox.Yes:
-            try:
-                if src == "pacman":
-                    uninstall_pacman(name)
-                elif src == "yay/AUR":
-                    uninstall_yay(name)
-                elif src == "flatpak":
-                    uninstall_flatpak(name)
-                elif src == "apt":
-                    uninstall_apt(name)
-                QMessageBox.information(self, "Sukses", f"{name} berhasil dihapus.")
-                self.load_apps()
-            except Exception as e:
-                QMessageBox.warning(self, "Error", f"Gagal menghapus {name}.\n\n{str(e)}")
+        if QMessageBox.question(self, 'Confirm', f'Remove {name} from {src}?', QMessageBox.Yes | QMessageBox.No) != QMessageBox.Yes:
+            return
 
-    # ---------------------------
-    #  Fungsi tema (light/dark)
-    # ---------------------------
-    def toggle_theme(self):
-        if self.is_dark:
-            self.apply_light_theme()
-            self.is_dark = False
-            self.theme_btn.setText("🌙 Dark")
-            self.theme_btn.setIcon(QIcon.fromTheme("weather-clear-night"))
-        else:
-            self.apply_dark_theme()
-            self.is_dark = True
-            self.theme_btn.setText("☀️ Light")
-            self.theme_btn.setIcon(QIcon.fromTheme("weather-sunny"))
+        try:
+            # Map source to command (for dry-run display) and to call
+            cmd = None
+            if src == 'pacman':
+                cmd = ['pacman', '-Rns', '--noconfirm', name]
+                action = lambda: uninstall_pacman(name)
+            elif src == 'yay/AUR':
+                cmd = ['yay', '-Rns', '--noconfirm', name]
+                action = lambda: uninstall_yay(name)
+            elif src == 'flatpak':
+                cmd = ['flatpak', 'uninstall', '-y', name]
+                action = lambda: uninstall_flatpak(name)
+            elif src == 'apt':
+                cmd = ['apt', 'remove', '-y', name]
+                action = lambda: uninstall_apt(name)
+            else:
+                raise RuntimeError('Unsupported source')
 
-    def apply_light_theme(self):
-        palette = QPalette()
-        palette.setColor(QPalette.Window, QColor("#fafafa"))
-        palette.setColor(QPalette.WindowText, Qt.black)
-        palette.setColor(QPalette.Base, QColor("#ffffff"))
-        palette.setColor(QPalette.AlternateBase, QColor("#f0f0f0"))
-        palette.setColor(QPalette.Text, Qt.black)
-        palette.setColor(QPalette.Button, QColor("#e6e6e6"))
-        palette.setColor(QPalette.ButtonText, Qt.black)
-        palette.setColor(QPalette.Highlight, QColor("#0078D7"))
-        palette.setColor(QPalette.HighlightedText, Qt.white)
-        QApplication.instance().setPalette(palette)
-        QApplication.instance().setStyle("fusion")
+            cmd_display = ' '.join(cmd) if cmd else name
+            if self.dry_run.isChecked():
+                # Do not execute; just log and show info
+                self.logger.info('Dry run: would run: %s', cmd_display)
+                QMessageBox.information(self, 'Dry run', f'Would run:\n{cmd_display}')
+                self.status.setText(f'Dry run: {cmd_display}')
+                return
 
-    def apply_dark_theme(self):
-        palette = QPalette()
-        palette.setColor(QPalette.Window, QColor(53, 53, 53))
-        palette.setColor(QPalette.WindowText, Qt.white)
-        palette.setColor(QPalette.Base, QColor(35, 35, 35))
-        palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-        palette.setColor(QPalette.ToolTipBase, Qt.white)
-        palette.setColor(QPalette.ToolTipText, Qt.white)
-        palette.setColor(QPalette.Text, Qt.white)
-        palette.setColor(QPalette.Button, QColor(53, 53, 53))
-        palette.setColor(QPalette.ButtonText, Qt.white)
-        palette.setColor(QPalette.BrightText, Qt.red)
-        palette.setColor(QPalette.Link, QColor("#2899F5"))
-        QApplication.instance().setPalette(palette)
-        QApplication.instance().setStyle("fusion")
+            # Execute the uninstall action and log
+            self.logger.info('Running uninstall: %s', cmd_display)
+            action()
+            self.logger.info('Uninstall requested for %s (%s)', name, src)
+            self.status.setText(f'{name} removed (attempted)')
+            self.load_apps()
+        except subprocess.CalledProcessError as cpe:
+            err = cpe.stderr or cpe.output or str(cpe)
+            self.status.setText(f'Uninstall failed: {err}')
+            QMessageBox.critical(self, 'Uninstall failed', err)
+            self.logger.error('Uninstall failed for %s: %s', name, err)
+        except Exception as e:
+            self.status.setText(f'Error: {e}')
+            traceback.print_exc()
+            self.logger.exception('Error during uninstall')
 
 
-if __name__ == "__main__":
+def main():
+    # Quick display check
+    display = os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')
+    if not display:
+        print('Warning: DISPLAY/WAYLAND_DISPLAY not set; ensure you run from a desktop session')
+
+    # Headless/list modes: print detected packages and exit
+    args = sys.argv[1:]
+    if '--list' in args or '--headless' in args:
+        distro = detect_distro()
+        apps = []
+        try:
+            if 'arch' in distro or 'manjaro' in distro:
+                apps = list_pacman_apps() + list_yay_apps() + list_flatpak_apps()
+            elif 'ubuntu' in distro or 'debian' in distro or 'mint' in distro:
+                apps = list_apt_apps() + list_flatpak_apps()
+            else:
+                apps = list_flatpak_apps()
+        except Exception as e:
+            print('Error listing apps:', e)
+            return 2
+
+        for src, name, ver in apps:
+            print(f'{src}\t{name}\t{ver}')
+        return 0
+
     app = QApplication(sys.argv)
-    window = AppWatch()
-    window.show()
-    sys.exit(app.exec_())
+    win = AppWatch()
+    win.show()
+    return app.exec_()
+
+
+if __name__ == '__main__':
+    rc = main()
+    sys.exit(rc)
